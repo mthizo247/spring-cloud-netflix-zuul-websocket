@@ -1,0 +1,8 @@
+target/
+*.log.gz
+*.iml
+.idea/
+*.log
+*.db
+/target
+target
