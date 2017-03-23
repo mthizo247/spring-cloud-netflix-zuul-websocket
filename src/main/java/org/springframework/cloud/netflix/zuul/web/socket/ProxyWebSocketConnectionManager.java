@@ -1,19 +1,19 @@
 package org.springframework.cloud.netflix.zuul.web.socket;
 
-import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.*;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandler;
 import org.springframework.util.ErrorHandler;
-import org.springframework.web.socket.*;
+import org.springframework.web.socket.WebSocketHttpHeaders;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.ConnectionManagerSupport;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,12 +68,8 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
 
     @Override
     protected void closeConnection() throws Exception {
-        if (this.serverSession != null) {
+        if (isConnected()) {
             this.serverSession.disconnect();
-        }
-
-        if (userAgentSession != null) {
-            userAgentSession.close();
         }
     }
 
@@ -113,6 +109,11 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
     }
 
     public void sendMessage(final String destination, final Object msg) {
+        if (msg instanceof String) { //in case of a json string to avoid double converstion by the converters
+            serverSession.send(destination, ((String) msg).getBytes());
+            return;
+        }
+
         serverSession.send(destination, msg);
     }
 
@@ -123,9 +124,7 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
             logger.info("Received " + payload + ", Foward " + headers.getDestination());
             Principal principal = userAgentSession.getPrincipal();
             if (principal != null) {
-               // String trueDestination = destination.replace("/user", "");
-                String name = principal.getName();
-                messagingTemplate.convertAndSendToUser(name, destination, payload, copyHeaders(headers.toSingleValueMap()));
+                messagingTemplate.convertAndSendToUser(principal.getName(), destination, payload, copyHeaders(headers.toSingleValueMap()));
             } else {
                 messagingTemplate.convertAndSend(destination, payload, copyHeaders(headers.toSingleValueMap()));
             }
@@ -168,33 +167,9 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
 
     public void disconnect() {
         try {
-            if (isConnected())
-                closeConnection();
+            closeConnection();
         } catch (Exception e) {
             //nothing
-        }
-    }
-
-    public void handlerProxiedTargetMessage(WebSocketSession session, WebSocketMessage<?> webSocketMessage) {
-        final StompDecoder DECODER = new StompDecoder();
-        BufferingStompDecoder bufferingDecoder = new BufferingStompDecoder(DECODER, 1024 * 1024 * 8);
-        List<Message<byte[]>> messages = Collections.<Message<byte[]>>emptyList();
-        ByteBuffer byteBuffer = null;
-        if (webSocketMessage instanceof TextMessage) {
-            byteBuffer = ByteBuffer.wrap(((TextMessage) webSocketMessage).asBytes());
-        } else if (webSocketMessage instanceof BinaryMessage) {
-            byteBuffer = ((BinaryMessage) webSocketMessage).getPayload();
-        }
-
-        if (byteBuffer != null) {
-            messages = bufferingDecoder.decode(byteBuffer);
-        }
-
-        DefaultStompSession defaultStompSession
-                = (DefaultStompSession) serverSession;
-
-        for (Message<byte[]> message : messages) {
-            defaultStompSession.handleMessage(message);
         }
     }
 }

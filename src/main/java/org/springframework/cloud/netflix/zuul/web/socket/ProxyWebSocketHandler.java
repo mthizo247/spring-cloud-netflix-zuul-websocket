@@ -1,5 +1,7 @@
 package org.springframework.cloud.netflix.zuul.web.socket;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -23,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by ronald22 on 10/03/2017.
  */
 public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
+    private final Logger logger = LoggerFactory.getLogger(ProxyWebSocketHandler.class);
     private final WebSocketHttpHeadersCallback headersCallback;
     private final SimpMessagingTemplate messagingTemplate;
     private final ZuulPropertiesResolver zuulPropertiesResolver;
@@ -64,9 +67,10 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
         return path.endsWith("/") ? path + "**" : path + "/**";
     }
 
+    @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+        disconnectFromProxiedTarget(session);
         super.afterConnectionClosed(session, closeStatus);
-        managers.remove(session);
     }
 
     @Override
@@ -79,9 +83,8 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
         boolean handled = false;
         WebSocketMessageAccessor accessor = WebSocketMessageAccessor.create(message);
         if (StompCommand.SEND.toString().equalsIgnoreCase(accessor.getCommand())) {
-           // handled = true;
-           // sendMessageToProxiedTarget(session, accessor);
-            System.out.println();
+            handled = true;
+            sendMessageToProxiedTarget(session, accessor);
         }
 
         if (StompCommand.SUBSCRIBE.toString().equalsIgnoreCase(accessor.getCommand())) {
@@ -99,14 +102,10 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
             connectToProxiedTarget(session);
         }
 
-        if (StompCommand.DISCONNECT.toString().equalsIgnoreCase(accessor.getCommand())) {
-            handled = true;
-            disconnectFromProxiedTarget(session);
-        }
-
         if (!handled) {
-            ProxyWebSocketConnectionManager connectionManager = managers.get(session);
-            connectionManager.handlerProxiedTargetMessage(session, message);
+            logger.warn("STOMP COMMAND " + accessor.getCommand() + " was not explicitly handled");
+        } else {
+            logger.warn("STOMP COMMAND " + accessor.getCommand() + " was handled");
         }
     }
 
@@ -146,8 +145,7 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 
     private void sendMessageToProxiedTarget(WebSocketSession session, WebSocketMessageAccessor accessor) {
         ProxyWebSocketConnectionManager manager = managers.get(session);
-        String payload = accessor.getPayload();
-        manager.sendMessage(accessor.getDestination(), payload);
+        manager.sendMessage(accessor.getDestination(), accessor.getPayload());
     }
 
     private void subscribeToProxiedTarget(WebSocketSession session, WebSocketMessageAccessor accessor) throws Exception {
