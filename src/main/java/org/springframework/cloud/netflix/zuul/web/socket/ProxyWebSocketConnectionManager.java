@@ -28,7 +28,6 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
     private Map<String, StompSession.Subscription> subscriptions = new ConcurrentHashMap<String, StompSession.Subscription>();
     private ErrorHandler errorHandler;
     private SimpMessagingTemplate messagingTemplate;
-    private final Object waitConnect = new Object();
 
     public ProxyWebSocketConnectionManager(SimpMessagingTemplate messagingTemplate, WebSocketStompClient stompClient, WebSocketSession userAgentSession, WebSocketHttpHeadersCallback httpHeadersCallback, String uri) {
         super(uri);
@@ -51,19 +50,17 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
 
     @Override
     protected void openConnection() {
-        connect(0);
+        connect();
     }
 
-    public void connect(long delay) {
-        if (delay > 0) {
-            logger.warn("Connection lost or refused, will attempt to reconnect after " + delay + " millis");
-            try {
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                //
-            }
+    private void connect() {
+        try {
+            serverSession = stompClient.connect(getUri().toString(), buildWebSocketHttpHeaders(), this)
+                    .get();
+        } catch (Exception e) {
+            logger.error("Error connecting to web socket uri " + getUri(), e);
+            throw new RuntimeException(e);
         }
-        stompClient.connect(getUri().toString(), buildWebSocketHttpHeaders(), this);
     }
 
     @Override
@@ -80,9 +77,7 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
 
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        serverSession = session;
-
-        notifyWaitConnect();
+        logger.info("Proxied target now connected " + session);
     }
 
     @Override
@@ -90,8 +85,6 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
         if (errorHandler != null) {
             errorHandler.handleError(ex);
         }
-
-        notifyWaitConnect();
     }
 
     @Override
@@ -99,8 +92,6 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
         if (errorHandler != null) {
             errorHandler.handleError(ex);
         }
-
-        notifyWaitConnect();
     }
 
     @Override
@@ -140,20 +131,14 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
         return copy;
     }
 
-    private void notifyWaitConnect() {
-        synchronized (waitConnect) {
-            waitConnect.notifyAll();
+    private void connectIfNecessary() {
+        if (!isConnected()) {
+            connect();
         }
     }
 
     public void subscribe(String destination) throws Exception {
-        if (serverSession == null || !serverSession.isConnected()) {
-            connect(0);
-            synchronized (waitConnect) {
-                waitConnect.wait();
-            }
-        }
-
+        connectIfNecessary();
         StompSession.Subscription subscription = serverSession.subscribe(destination, this);
         subscriptions.put(destination, subscription);
     }
@@ -161,6 +146,7 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport im
     public void unsubscribe(String destination) {
         StompSession.Subscription subscription = subscriptions.remove(destination);
         if (subscription != null) {
+            connectIfNecessary();
             subscription.unsubscribe();
         }
     }
