@@ -1,8 +1,11 @@
 package org.springframework.cloud.netflix.zuul.web.socket;
 
 /**
- * Created by ronald22 on 14/03/2017.
+ * Strategy to resolve zuul properties
+ *
+ * @author Ronald Mthombeni
+ * @author Salman Noor
  */
 public interface ZuulPropertiesResolver {
-    String getRouteHost();
+	String getRouteHost();
 }

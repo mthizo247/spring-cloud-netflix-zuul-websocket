@@ -1,11 +1,15 @@
 package org.springframework.cloud.netflix.zuul.web.socket;
 
-import org.springframework.context.annotation.Import;
-
 import java.lang.annotation.*;
 
+import org.springframework.context.annotation.Import;
+
 /**
- * Created by ronald22 on 10/03/2017.
+ * Sets up a Zuul web socket configuration so that it can bridge web socket communication
+ * to backend servers.
+ *
+ * @author Ronald Mthombeni
+ * @author Salman Noor
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

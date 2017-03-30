@@ -3,8 +3,11 @@ package org.springframework.cloud.netflix.zuul.web.socket;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 
 /**
- * Created by ronald22 on 10/03/2017.
+ * Callback strategy to supply web socket headers to handshake requests.
+ *
+ * @author Ronald Mthombeni
+ * @author Salman Noor
  */
 public interface WebSocketHttpHeadersCallback {
-    WebSocketHttpHeaders getWebSocketHttpHeaders();
+	WebSocketHttpHeaders getWebSocketHttpHeaders();
 }

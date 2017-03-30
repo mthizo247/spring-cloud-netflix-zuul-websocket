@@ -1,5 +1,10 @@
 package org.springframework.cloud.netflix.zuul.web.socket;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,18 +28,16 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
-import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 /**
- * Created by ronald22 on 10/03/2017.
+ * Zuul reverse proxy web socket configuration
+ *
+ * @author Ronald Mthombeni
+ * @author Salman Noor
  */
 @Configuration
 @ConditionalOnWebApplication
@@ -42,161 +45,142 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "zuul.ws", name = "enabled", havingValue = "true")
 @EnableConfigurationProperties(ZuulWebSocketProperties.class)
 public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
-    @Autowired
-    ZuulWebSocketProperties zuulWebSocketProperties;
-    @Autowired
-    SimpMessagingTemplate messagingTemplate;
-    @Autowired
-    ZuulProperties zuulProperties;
-    @Autowired
-    ZuulPropertiesResolver zuulPropertiesResolver;
-    @Autowired
-    ProxyWebSocketErrorHandler proxyWebSocketErrorHandler;
-    @Autowired
-    WebSocketStompClient stompClient;
-    @Autowired
-    WebSocketHttpHeadersCallback webSocketHttpHeadersCallback;
+	@Autowired
+	ZuulWebSocketProperties zuulWebSocketProperties;
+	@Autowired
+	SimpMessagingTemplate messagingTemplate;
+	@Autowired
+	ZuulProperties zuulProperties;
+	@Autowired
+	ZuulPropertiesResolver zuulPropertiesResolver;
+	@Autowired
+	ProxyWebSocketErrorHandler proxyWebSocketErrorHandler;
+	@Autowired
+	WebSocketStompClient stompClient;
+	@Autowired
+	WebSocketHttpHeadersCallback webSocketHttpHeadersCallback;
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry
-                .addEndpoint(zuulWebSocketProperties.getEndPoints())
-                        //bypasses spring web security
-                .setAllowedOrigins("*")
-                .withSockJS();
-    }
+	@Override
+	public void registerStompEndpoints(StompEndpointRegistry registry) {
+		for (Map.Entry<String, ZuulWebSocketProperties.WsBrokerage> entry : zuulWebSocketProperties
+				.getBrokerages().entrySet()) {
+			ZuulWebSocketProperties.WsBrokerage wsBrokerage = entry.getValue();
+			if (wsBrokerage.isEnabled()) {
+				registry.addEndpoint(wsBrokerage.getEndPoints())
+						// bypasses spring web security
+						.setAllowedOrigins("*").withSockJS();
+			}
+		}
+	}
 
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        //prefix for subscribe
-        config.enableSimpleBroker(mergeBrokersWithApplicationDestinationPrefixes(zuulWebSocketProperties));
-        //prefix for send
-        config.setApplicationDestinationPrefixes(zuulWebSocketProperties.getDestinationPrefixes());
-    }
+	@Override
+	public void configureMessageBroker(MessageBrokerRegistry config) {
+		// prefix for subscribe
+		for (Map.Entry<String, ZuulWebSocketProperties.WsBrokerage> entry : zuulWebSocketProperties
+				.getBrokerages().entrySet()) {
+			ZuulWebSocketProperties.WsBrokerage wsBrokerage = entry.getValue();
+			if (wsBrokerage.isEnabled()) {
+				config.enableSimpleBroker(
+						mergeBrokersWithApplicationDestinationPrefixes(wsBrokerage));
+				// prefix for send
+				config.setApplicationDestinationPrefixes(
+						wsBrokerage.getDestinationPrefixes());
+			}
+		}
+	}
 
-    private String[] mergeBrokersWithApplicationDestinationPrefixes(ZuulWebSocketProperties zuulWebSocketProperties) {
-        List<String> brokers = new ArrayList<>(Arrays.asList(zuulWebSocketProperties.getBrokers()));
+	private String[] mergeBrokersWithApplicationDestinationPrefixes(
+			ZuulWebSocketProperties.WsBrokerage wsBrokerage) {
+		List<String> brokers = new ArrayList<>(Arrays.asList(wsBrokerage.getBrokers()));
 
-        for (String adp : zuulWebSocketProperties.getDestinationPrefixes()) {
-            if (!brokers.contains(adp)) {
-                brokers.add(adp);
-            }
-        }
+		for (String adp : wsBrokerage.getDestinationPrefixes()) {
+			if (!brokers.contains(adp)) {
+				brokers.add(adp);
+			}
+		}
 
-        return brokers.toArray(new String[brokers.size()]);
-    }
+		return brokers.toArray(new String[brokers.size()]);
+	}
 
-    @Override
-    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
-        registration.addDecoratorFactory(new WebSocketHandlerDecoratorFactory() {
-            @Override
-            public WebSocketHandler decorate(WebSocketHandler handler) {
-                ProxyWebSocketHandler proxyWebSocketHandler = new ProxyWebSocketHandler(handler, stompClient, webSocketHttpHeadersCallback, messagingTemplate, zuulPropertiesResolver, zuulWebSocketProperties);
-                proxyWebSocketHandler.errorHandler(proxyWebSocketErrorHandler);
-                return proxyWebSocketHandler;
-            }
-        });
-    }
+	@Override
+	public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+		registration.addDecoratorFactory(handler -> {
+			ProxyWebSocketHandler proxyWebSocketHandler = new ProxyWebSocketHandler(
+					handler, stompClient, webSocketHttpHeadersCallback, messagingTemplate,
+					zuulPropertiesResolver, zuulWebSocketProperties);
+			proxyWebSocketHandler.errorHandler(proxyWebSocketErrorHandler);
+			return proxyWebSocketHandler;
+		});
+	}
 
-   /* @Override
-    public void configureClientOutboundChannel(ChannelRegistration registration) {
-        super.configureClientOutboundChannel(registration);
-        registration.setInterceptors(new ChannelInterceptorAdapter() {
+	@Bean
+	@ConditionalOnMissingBean(WebSocketHttpHeadersCallback.class)
+	public WebSocketHttpHeadersCallback webSocketHttpHeadersCallback() {
+		return () -> new WebSocketHttpHeaders();
+	}
 
-            @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+	@Bean
+	@ConditionalOnMissingBean
+	public ZuulPropertiesResolver zuulPropertiesResolver(
+			final ZuulProperties zuulProperties) {
+		return () -> {
+			for (String key : zuulProperties.getRoutes().keySet()) {
+				String url = zuulProperties.getRoutes().get(key).getUrl();
+				if (url != null) {
+					return url;
+				}
+			}
 
-                StompHeaderAccessor accessor =
-                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+			return null;
+		};
+	}
 
-                SimpMessageHeaderAccessor accessor2 =
-                        MessageHeaderAccessor.getAccessor(message, SimpMessageHeaderAccessor.class);
+	@Bean
+	@ConditionalOnMissingBean(WebSocketStompClient.class)
+	public WebSocketStompClient stompClient(MessageConverter messageConverter,
+			ThreadPoolTaskScheduler taskScheduler) {
+		int bufferSizeLimit = 1024 * 1024 * 8;
 
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                //Principal user = SecurityContextHolder
-                //accessor.setUser(user);
-                System.out.println(authentication);
+		StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
+		List<Transport> transports = new ArrayList<>();
+		transports.add(new WebSocketTransport(webSocketClient));
+		SockJsClient sockJsClient = new SockJsClient(transports);
+		WebSocketStompClient client = new WebSocketStompClient(sockJsClient);
+		client.setInboundMessageSizeLimit(bufferSizeLimit);
+		client.setMessageConverter(messageConverter);
+		client.setTaskScheduler(taskScheduler);
+		client.setDefaultHeartbeat(new long[] { 0, 0 });
+		return client;
+	}
 
-                return message;
-            }
-        });
-    }*/
+	@Bean
+	@ConditionalOnMissingBean(TaskScheduler.class)
+	public TaskScheduler stompClientTaskScheduler() {
+		return new ThreadPoolTaskScheduler();
+	}
 
-    @Bean
-    @ConditionalOnMissingBean(WebSocketHttpHeadersCallback.class)
-    public WebSocketHttpHeadersCallback webSocketHttpHeadersCallback() {
-        return new WebSocketHttpHeadersCallback() {
+	@Bean
+	@ConditionalOnMissingBean(ProxyWebSocketErrorHandler.class)
+	public ProxyWebSocketErrorHandler proxyWebSocketErrorHandler() {
+		return new DefaultProxyWebSocketErrorHandler();
+	}
 
-            @Override
-            public WebSocketHttpHeaders getWebSocketHttpHeaders() {
-                return new WebSocketHttpHeaders();
-            }
-        };
-    }
+	/**
+	 * An {@link ErrorHandler} implementation that logs the Throwable at error level. It
+	 * does not perform any additional error handling. This can be useful when suppression
+	 * of errors is the intended behavior.
+	 */
+	private static class DefaultProxyWebSocketErrorHandler
+			implements ProxyWebSocketErrorHandler {
 
-    @Bean
-    @ConditionalOnMissingBean
-    public ZuulPropertiesResolver zuulPropertiesResolver(final ZuulProperties zuulProperties) {
-        return new ZuulPropertiesResolver() {
+		private final Log logger = LogFactory
+				.getLog(DefaultProxyWebSocketErrorHandler.class);
 
-            @Override
-            public String getRouteHost() {
-                for (String key : zuulProperties.getRoutes().keySet()) {
-                    String url = zuulProperties.getRoutes().get(key).getUrl();
-                    if (url != null) {
-                        return url;
-                    }
-                }
-
-                return null;
-            }
-        };
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(WebSocketStompClient.class)
-    public WebSocketStompClient stompClient(MessageConverter messageConverter, ThreadPoolTaskScheduler taskScheduler) {
-        int bufferSizeLimit = 1024 * 1024 * 8;
-
-        StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
-        List<Transport> transports = new ArrayList<>();
-        transports.add(new WebSocketTransport(webSocketClient));
-        SockJsClient sockJsClient = new SockJsClient(transports);
-        WebSocketStompClient client = new WebSocketStompClient(sockJsClient);
-        client.setInboundMessageSizeLimit(bufferSizeLimit);
-        client.setMessageConverter(messageConverter);
-        client.setTaskScheduler(taskScheduler);
-        client.setDefaultHeartbeat(new long[]{0, 0});
-        return client;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(TaskScheduler.class)
-    public TaskScheduler stompClientTaskScheduler() {
-        return new ThreadPoolTaskScheduler();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(ProxyWebSocketErrorHandler.class)
-    public ProxyWebSocketErrorHandler proxyWebSocketErrorHandler() {
-        return new DefaultProxyWebSocketErrorHandler();
-    }
-
-
-    /**
-     * An {@link ErrorHandler} implementation that logs the Throwable at error
-     * level. It does not perform any additional error handling. This can be
-     * useful when suppression of errors is the intended behavior.
-     */
-    private static class DefaultProxyWebSocketErrorHandler implements ProxyWebSocketErrorHandler {
-
-        private final Log logger = LogFactory.getLog(DefaultProxyWebSocketErrorHandler.class);
-
-        @Override
-        public void handleError(Throwable t) {
-            if (logger.isErrorEnabled()) {
-                logger.error("Proxy web socket error occurred.", t);
-            }
-        }
-    }
+		@Override
+		public void handleError(Throwable t) {
+			if (logger.isErrorEnabled()) {
+				logger.error("Proxy web socket error occurred.", t);
+			}
+		}
+	}
 }

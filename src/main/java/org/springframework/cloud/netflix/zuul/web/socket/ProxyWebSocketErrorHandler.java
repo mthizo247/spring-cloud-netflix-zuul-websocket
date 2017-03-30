@@ -3,10 +3,10 @@ package org.springframework.cloud.netflix.zuul.web.socket;
 import org.springframework.util.ErrorHandler;
 
 /**
- * Created by ronald22 on 14/03/2017.
+ * A simple tagging interface for pluggable web socket connection error handlers
  *
- * Simple tagging interface
+ * @author Ronald Mthombeni
+ * @author Salman Noor
  */
-
 public interface ProxyWebSocketErrorHandler extends ErrorHandler {
 }
