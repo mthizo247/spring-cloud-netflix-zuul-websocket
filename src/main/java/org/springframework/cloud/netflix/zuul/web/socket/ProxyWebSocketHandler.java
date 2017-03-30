@@ -56,7 +56,23 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 		this.errorHandler = errorHandler;
 	}
 
-	private String getWebSocketServerPath(URI uri) {
+	private String getWebSocketServerPath(ZuulWebSocketProperties.WsBrokerage wsBrokerage,
+			URI uri) {
+		String path = uri.toString();
+		if (path.contains(":")) {
+			path = UriComponentsBuilder.fromUriString(path).build().getPath();
+		}
+
+		for (String endPoint : wsBrokerage.getEndPoints()) {
+			if (PatternMatchUtils.simpleMatch(toPattern(endPoint), path + "/")) {
+				return endPoint;
+			}
+		}
+
+		return null;
+	}
+
+	private ZuulWebSocketProperties.WsBrokerage getWebSocketBrokarage(URI uri) {
 		String path = uri.toString();
 		if (path.contains(":")) {
 			path = UriComponentsBuilder.fromUriString(path).build().getPath();
@@ -68,7 +84,7 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 			if (wsBrokerage.isEnabled()) {
 				for (String endPoint : wsBrokerage.getEndPoints()) {
 					if (PatternMatchUtils.simpleMatch(toPattern(endPoint), path + "/")) {
-						return endPoint;
+						return wsBrokerage;
 					}
 				}
 			}
@@ -129,11 +145,19 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 	}
 
 	private void connectToProxiedTarget(WebSocketSession session) {
-		String path = getWebSocketServerPath(session.getUri());
-		Assert.notNull(path, "Web socket uri path cannot be null");
+		URI sessionUri = session.getUri();
+		ZuulWebSocketProperties.WsBrokerage wsBrokerage = getWebSocketBrokarage(
+				sessionUri);
 
-		String url = zuulPropertiesResolver.getRouteHost();
-		String uri = ServletUriComponentsBuilder.fromHttpUrl(url).path(path)
+		Assert.notNull(wsBrokerage, "wsBrokerage");
+
+		String path = getWebSocketServerPath(wsBrokerage, sessionUri);
+		Assert.notNull(path, "Web socket uri path");
+
+		String routeHost = zuulPropertiesResolver.getRouteHost(wsBrokerage);
+		Assert.notNull(routeHost, "routeHost");
+
+		String uri = ServletUriComponentsBuilder.fromHttpUrl(routeHost).path(path)
 				.toUriString();
 		ProxyWebSocketConnectionManager connectionManager = new ProxyWebSocketConnectionManager(
 				messagingTemplate, stompClient, session, headersCallback, uri);

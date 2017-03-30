@@ -1,5 +1,7 @@
 package org.springframework.cloud.netflix.zuul.web.socket;
 
+import java.net.URI;
+
 /**
  * Strategy to resolve zuul properties
  *
@@ -7,5 +9,5 @@ package org.springframework.cloud.netflix.zuul.web.socket;
  * @author Salman Noor
  */
 public interface ZuulPropertiesResolver {
-	String getRouteHost();
+	String getRouteHost(ZuulWebSocketProperties.WsBrokerage wsBrokerage);
 }

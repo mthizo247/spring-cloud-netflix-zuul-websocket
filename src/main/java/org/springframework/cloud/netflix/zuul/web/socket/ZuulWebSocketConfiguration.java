@@ -123,16 +123,7 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 	@ConditionalOnMissingBean
 	public ZuulPropertiesResolver zuulPropertiesResolver(
 			final ZuulProperties zuulProperties) {
-		return () -> {
-			for (String key : zuulProperties.getRoutes().keySet()) {
-				String url = zuulProperties.getRoutes().get(key).getUrl();
-				if (url != null) {
-					return url;
-				}
-			}
-
-			return null;
-		};
+		return (wsBrokerage) -> zuulProperties.getRoutes().get(wsBrokerage.getId()).getUrl();
 	}
 
 	@Bean
