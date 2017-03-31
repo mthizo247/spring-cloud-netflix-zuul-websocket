@@ -1,3 +1,19 @@
+/*
+ * Copyright 2002-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.netflix.zuul.web.socket;
 
 import java.net.URI;
@@ -6,10 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
 import org.springframework.util.PatternMatchUtils;
@@ -198,55 +212,5 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 			WebSocketMessageAccessor accessor) throws Exception {
 		ProxyWebSocketConnectionManager manager = managers.get(session);
 		manager.subscribe(accessor.getDestination());
-	}
-
-	public static class Builder {
-		private SimpMessagingTemplate messagingTemplate;
-		private ZuulPropertiesResolver zuulPropertiesResolver;
-		private ZuulWebSocketProperties zuulWebSocketProperties;
-		private int inboundMessageSizeLimit;
-		private MessageConverter messageConverter;
-		private TaskScheduler taskScheduler;
-
-		public Object build(WebSocketHandler delegate) {
-			return null;
-		}
-
-		public Builder withMessagingTemplate(SimpMessagingTemplate messagingTemplate) {
-			this.messagingTemplate = messagingTemplate;
-			return this;
-		}
-
-		public Builder withZuulPropertiesResolver(
-				ZuulPropertiesResolver zuulPropertiesResolver) {
-			this.zuulPropertiesResolver = zuulPropertiesResolver;
-			return this;
-		}
-
-		public Builder withZuulWebSocketProperties(
-				ZuulWebSocketProperties zuulWebSocketProperties) {
-			this.zuulWebSocketProperties = zuulWebSocketProperties;
-			return this;
-		}
-
-		public Builder withInboundMessageSizeLimit(int inboundMessageSizeLimit) {
-			this.inboundMessageSizeLimit = inboundMessageSizeLimit;
-			return this;
-		}
-
-		public Builder withMessageConverter(MessageConverter messageConverter) {
-			this.messageConverter = messageConverter;
-			return this;
-		}
-
-		public Builder withTaskScheduler(TaskScheduler taskScheduler) {
-			this.taskScheduler = taskScheduler;
-			return this;
-		}
-
-		public Builder withDefaultHeartbeat(TaskScheduler taskScheduler) {
-			this.taskScheduler = taskScheduler;
-			return this;
-		}
 	}
 }
