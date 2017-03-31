@@ -102,7 +102,9 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport
 
 	@Override
 	public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-		logger.info("Proxied target now connected " + session);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Proxied target now connected " + session);
+		}
 	}
 
 	@Override
@@ -139,7 +141,7 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport
 	public void handleFrame(StompHeaders headers, Object payload) {
 		if (headers.getDestination() != null) {
 			String destination = headers.getDestination();
-			if(logger.isDebugEnabled()) {
+			if (logger.isDebugEnabled()) {
 				logger.debug("Received " + payload + ", To " + headers.getDestination());
 			}
 
