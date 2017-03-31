@@ -136,11 +136,10 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 		}
 
 		if (!handled) {
-			logger.warn("STOMP COMMAND " + accessor.getCommand()
-					+ " was not explicitly handled");
-		}
-		else {
-			logger.warn("STOMP COMMAND " + accessor.getCommand() + " was handled");
+			if (logger.isDebugEnabled()) {
+				logger.debug("STOMP COMMAND " + accessor.getCommand()
+						+ " was not explicitly handled");
+			}
 		}
 	}
 

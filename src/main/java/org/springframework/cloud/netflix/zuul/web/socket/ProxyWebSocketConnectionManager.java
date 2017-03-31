@@ -123,7 +123,10 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport
 	public void handleFrame(StompHeaders headers, Object payload) {
 		if (headers.getDestination() != null) {
 			String destination = headers.getDestination();
-			logger.info("Received " + payload + ", Foward " + headers.getDestination());
+			if(logger.isDebugEnabled()) {
+				logger.debug("Received " + payload + ", To " + headers.getDestination());
+			}
+
 			Principal principal = userAgentSession.getPrincipal();
 			if (principal != null) {
 				messagingTemplate.convertAndSendToUser(principal.getName(), destination,
