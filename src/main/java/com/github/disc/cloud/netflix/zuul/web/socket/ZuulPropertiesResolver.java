@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.netflix.zuul.web.socket;
-
-import org.springframework.web.socket.WebSocketHttpHeaders;
+package com.github.disc.cloud.netflix.zuul.web.socket;
 
 /**
- * Callback strategy to supply web socket headers to handshake requests.
+ * Strategy to resolve zuul properties
  *
  * @author Ronald Mthombeni
  * @author Salman Noor
  */
-public interface WebSocketHttpHeadersCallback {
-	WebSocketHttpHeaders getWebSocketHttpHeaders();
+public interface ZuulPropertiesResolver {
+	String getRouteHost(ZuulWebSocketProperties.WsBrokerage wsBrokerage);
 }

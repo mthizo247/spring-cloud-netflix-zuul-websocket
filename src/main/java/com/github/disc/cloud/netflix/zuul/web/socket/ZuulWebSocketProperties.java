@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.netflix.zuul.web.socket;
+package com.github.disc.cloud.netflix.zuul.web.socket;
 
 import java.util.HashMap;
 import java.util.Map;

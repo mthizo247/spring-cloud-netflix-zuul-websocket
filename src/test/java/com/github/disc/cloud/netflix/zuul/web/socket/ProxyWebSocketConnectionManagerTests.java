@@ -1,4 +1,4 @@
-package org.springframework.cloud.netflix.zuul.web.socket;
+package com.github.disc.cloud.netflix.zuul.web.socket;
 
 import static org.mockito.Mockito.*;
 
