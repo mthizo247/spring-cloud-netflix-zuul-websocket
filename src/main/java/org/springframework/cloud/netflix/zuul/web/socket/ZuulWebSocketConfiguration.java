@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
@@ -120,26 +123,40 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 
 	@Override
 	public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
-		registration.addDecoratorFactory(handler -> {
-			ProxyWebSocketHandler proxyWebSocketHandler = new ProxyWebSocketHandler(
-					handler, stompClient, webSocketHttpHeadersCallback, messagingTemplate,
-					zuulPropertiesResolver, zuulWebSocketProperties);
-			proxyWebSocketHandler.errorHandler(proxyWebSocketErrorHandler);
-			return proxyWebSocketHandler;
+		registration.addDecoratorFactory(new WebSocketHandlerDecoratorFactory() {
+			@Override
+			public WebSocketHandler decorate(WebSocketHandler handler) {
+				ProxyWebSocketHandler proxyWebSocketHandler = new ProxyWebSocketHandler(
+						handler, stompClient, webSocketHttpHeadersCallback,
+						messagingTemplate, zuulPropertiesResolver,
+						zuulWebSocketProperties);
+				proxyWebSocketHandler.errorHandler(proxyWebSocketErrorHandler);
+				return proxyWebSocketHandler;
+			}
 		});
 	}
 
 	@Bean
 	@ConditionalOnMissingBean(WebSocketHttpHeadersCallback.class)
 	public WebSocketHttpHeadersCallback webSocketHttpHeadersCallback() {
-		return () -> new WebSocketHttpHeaders();
+		return new WebSocketHttpHeadersCallback() {
+			@Override
+			public WebSocketHttpHeaders getWebSocketHttpHeaders() {
+				return new WebSocketHttpHeaders();
+			}
+		};
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	public ZuulPropertiesResolver zuulPropertiesResolver(
 			final ZuulProperties zuulProperties) {
-		return (wsBrokerage) -> zuulProperties.getRoutes().get(wsBrokerage.getId()).getUrl();
+		return new ZuulPropertiesResolver() {
+			@Override
+			public String getRouteHost(ZuulWebSocketProperties.WsBrokerage wsBrokerage) {
+				return zuulProperties.getRoutes().get(wsBrokerage.getId()).getUrl();
+			}
+		};
 	}
 
 	@Bean
@@ -170,6 +187,21 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 	@ConditionalOnMissingBean(ProxyWebSocketErrorHandler.class)
 	public ProxyWebSocketErrorHandler proxyWebSocketErrorHandler() {
 		return new DefaultProxyWebSocketErrorHandler();
+	}
+
+	@PostConstruct
+	public void init() {
+		ignorePattern("/websocket");
+		ignorePattern("/info");
+	}
+
+	private void ignorePattern(String ignoredPattern) {
+		for (String pattern : zuulProperties.getIgnoredPatterns()) {
+			if (pattern.toLowerCase().contains(ignoredPattern))
+				return;
+		}
+
+		zuulProperties.getIgnoredPatterns().add(ignoredPattern);
 	}
 
 	/**
