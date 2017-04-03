@@ -18,6 +18,7 @@ package org.springframework.cloud.netflix.zuul.web.socket;
 
 import java.lang.annotation.*;
 
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -30,6 +31,7 @@ import org.springframework.context.annotation.Import;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@EnableZuulProxy
 @Import(ZuulWebSocketConfiguration.class)
 public @interface EnableZuulWebSocket {
 }

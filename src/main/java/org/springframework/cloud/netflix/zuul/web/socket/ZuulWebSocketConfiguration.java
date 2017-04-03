@@ -191,8 +191,8 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 
 	@PostConstruct
 	public void init() {
-		ignorePattern("/websocket");
-		ignorePattern("/info");
+		ignorePattern("**/websocket");
+		ignorePattern("**/info");
 	}
 
 	private void ignorePattern(String ignoredPattern) {
