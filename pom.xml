@@ -132,6 +132,14 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>maven</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>1.4.1</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>3.0.1</version>
