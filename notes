@@ -1,2 +1,5 @@
 https://jmnarloch.wordpress.com/2015/11/11/spring-cloud-sock-js-stomp-zuul-no-websockets/
 https://github.com/spring-cloud/spring-cloud-netflix/issues/163
+
+ssh://git@bitbucket.discsrv.co.za:7999/~ronald22/spring-cloud-netflix-zuul-websocket.git
+https://github.com/mthizo247/spring-cloud-netflix-zuul-websocket.git
