@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.disc.cloud.netflix.zuul.web.socket;
+package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
 import org.springframework.web.socket.WebSocketHttpHeaders;
 

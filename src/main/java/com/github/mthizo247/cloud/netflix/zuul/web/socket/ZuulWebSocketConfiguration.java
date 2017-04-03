@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.disc.cloud.netflix.zuul.web.socket;
+package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +61,7 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 @Configuration
 @ConditionalOnWebApplication
 @ConditionalOnClass(WebSocketHandler.class)
-@ConditionalOnProperty(prefix = "zuul.ws", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "zuul.ws", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(ZuulWebSocketProperties.class)
 public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
 	@Autowired

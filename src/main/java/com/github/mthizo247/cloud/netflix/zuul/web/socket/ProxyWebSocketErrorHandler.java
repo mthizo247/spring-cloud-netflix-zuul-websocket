@@ -14,24 +14,15 @@
  * limitations under the License.
  */
 
-package com.github.disc.cloud.netflix.zuul.web.socket;
+package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
-import java.lang.annotation.*;
-
-import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
-import org.springframework.context.annotation.Import;
+import org.springframework.util.ErrorHandler;
 
 /**
- * Sets up a Zuul web socket configuration so that it can bridge web socket communication
- * to backend servers.
+ * A simple tagging interface for pluggable web socket connection error handlers
  *
  * @author Ronald Mthombeni
  * @author Salman Noor
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@EnableZuulProxy
-@Import(ZuulWebSocketConfiguration.class)
-public @interface EnableZuulWebSocket {
+public interface ProxyWebSocketErrorHandler extends ErrorHandler {
 }

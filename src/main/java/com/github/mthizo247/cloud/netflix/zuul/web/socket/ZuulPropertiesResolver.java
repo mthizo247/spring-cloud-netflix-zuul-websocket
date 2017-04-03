@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.github.disc.cloud.netflix.zuul.web.socket;
-
-import org.springframework.util.ErrorHandler;
+package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
 /**
- * A simple tagging interface for pluggable web socket connection error handlers
+ * Strategy to resolve zuul properties
  *
  * @author Ronald Mthombeni
  * @author Salman Noor
  */
-public interface ProxyWebSocketErrorHandler extends ErrorHandler {
+public interface ZuulPropertiesResolver {
+	String getRouteHost(ZuulWebSocketProperties.WsBrokerage wsBrokerage);
 }

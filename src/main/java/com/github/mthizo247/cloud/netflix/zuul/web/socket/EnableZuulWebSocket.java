@@ -14,14 +14,24 @@
  * limitations under the License.
  */
 
-package com.github.disc.cloud.netflix.zuul.web.socket;
+package com.github.mthizo247.cloud.netflix.zuul.web.socket;
+
+import java.lang.annotation.*;
+
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.context.annotation.Import;
 
 /**
- * Strategy to resolve zuul properties
+ * Sets up a Zuul web socket configuration so that it can bridge web socket communication
+ * to backend servers.
  *
  * @author Ronald Mthombeni
  * @author Salman Noor
  */
-public interface ZuulPropertiesResolver {
-	String getRouteHost(ZuulWebSocketProperties.WsBrokerage wsBrokerage);
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@EnableZuulProxy
+@Import(ZuulWebSocketConfiguration.class)
+public @interface EnableZuulWebSocket {
 }
