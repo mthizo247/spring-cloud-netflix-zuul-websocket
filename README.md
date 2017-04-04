@@ -15,7 +15,7 @@ spring-cloud-netflix-zuul-websocket is available from **Maven Central**
 
 ### Who is this for?
 
-This is for anyone using **Spring Netflix Zuul** to proxy requests to back-ends which supports web sockets.
+This is for anyone using **Spring Netflix Zuul** to proxy requests to back-ends which supports web sockets but the proxy layer does not.
 **Netflix Zuul** does not natively support web sockets.
 
 ### How do I use this?
