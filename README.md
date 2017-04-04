@@ -33,10 +33,7 @@ public class ProxyApplication {
 }
 ```
 
-**@EnableZuulWebSocket** is a meta-annotation that automatically enables **@EnableZuulProxy** as well.
-
-
-Then in your spring application properties
+Then in your spring application properties(e.g application.yml)
 
 ```
 server:
@@ -51,7 +48,11 @@ zuul:
    ws:
       brokerages:
         hello:
-          end-points: /gs-guide-websocket
+          end-points: /ws
           brokers:  /topic
           destination-prefixes: /app
 ```
+
+With this you should have web sockets to your back-end service working correctly.
+
+**Checkout** this [demo](https://github.com/mthizo247/zuul-websocket-support-demo)
