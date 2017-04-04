@@ -34,9 +34,7 @@ public final class WebSocketMessageAccessor {
 
 	public static WebSocketMessageAccessor create(WebSocketMessage<?> message) {
 		String msgPayload = message.getPayload().toString();
-		WebSocketMessageAccessor accessor = new WebSocketMessageAccessor();
-		accessor.messageComponents = StringUtils.tokenizeToStringArray(msgPayload, "\n");
-		return accessor;
+		return create(msgPayload);
 	}
 
 	public static WebSocketMessageAccessor create(String message) {

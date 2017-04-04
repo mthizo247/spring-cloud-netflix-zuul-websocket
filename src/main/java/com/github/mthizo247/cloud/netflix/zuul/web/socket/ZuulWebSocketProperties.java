@@ -30,7 +30,7 @@ import org.springframework.util.StringUtils;
  */
 @ConfigurationProperties("zuul.ws")
 public class ZuulWebSocketProperties {
-	private boolean enabled;
+	private boolean enabled = true;
 	private Map<String, WsBrokerage> brokerages = new HashMap<>();
 
 	public boolean isEnabled() {
