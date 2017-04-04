@@ -33,6 +33,9 @@ public class ProxyApplication {
 }
 ```
 
+**@EnableZuulWebSocket** is a meta-annotation that automatically enables **@EnableZuulProxy** as well.
+
+
 Then in your spring application properties
 
 ```
