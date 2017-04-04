@@ -147,6 +147,14 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport
 
 			Principal principal = userAgentSession.getPrincipal();
 			if (principal != null) {
+				if (messagingTemplate.getUserDestinationPrefix() != null && destination
+						.startsWith(messagingTemplate.getUserDestinationPrefix())) {
+					destination = destination.substring(
+							messagingTemplate.getUserDestinationPrefix().length());
+
+					destination = destination.startsWith("/") ? destination
+							: "/" + destination;
+				}
 				messagingTemplate.convertAndSendToUser(principal.getName(), destination,
 						payload, copyHeaders(headers.toSingleValueMap()));
 			}
