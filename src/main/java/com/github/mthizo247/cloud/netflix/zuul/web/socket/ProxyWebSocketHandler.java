@@ -115,7 +115,7 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus)
 			throws Exception {
-		//disconnectFromProxiedTarget(session);
+		disconnectFromProxiedTarget(session);
 		super.afterConnectionClosed(session, closeStatus);
 	}
 
