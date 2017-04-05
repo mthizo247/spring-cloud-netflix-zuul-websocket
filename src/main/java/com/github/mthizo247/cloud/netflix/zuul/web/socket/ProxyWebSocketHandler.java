@@ -108,7 +108,8 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 	}
 
 	private String toPattern(String path) {
-		return path.endsWith("/") ? path + "**" : path + "/**";
+        path = path.startsWith("/") ? "**" + path : "**/" + path;
+        return path.endsWith("/") ? path + "**" : path + "/**";
 	}
 
 	@Override
