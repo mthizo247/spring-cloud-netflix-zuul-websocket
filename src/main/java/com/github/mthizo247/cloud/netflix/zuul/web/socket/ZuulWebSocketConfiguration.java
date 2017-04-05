@@ -31,6 +31,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +52,8 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
+
+import com.github.mthizo247.cloud.netflix.zuul.web.filter.ProxyRedirectFilter;
 
 /**
  * Zuul reverse proxy web socket configuration
@@ -187,6 +190,11 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 	@ConditionalOnMissingBean(ProxyWebSocketErrorHandler.class)
 	public ProxyWebSocketErrorHandler proxyWebSocketErrorHandler() {
 		return new DefaultProxyWebSocketErrorHandler();
+	}
+
+	@Bean
+	public ProxyRedirectFilter proxyRedirectFilter(RouteLocator routeLocator) {
+		return new ProxyRedirectFilter(routeLocator);
 	}
 
 	@PostConstruct
