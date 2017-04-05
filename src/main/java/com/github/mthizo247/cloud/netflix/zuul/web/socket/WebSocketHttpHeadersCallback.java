@@ -17,6 +17,7 @@
 package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
 import org.springframework.web.socket.WebSocketHttpHeaders;
+import org.springframework.web.socket.WebSocketSession;
 
 /**
  * Callback strategy to supply web socket headers to handshake requests.
@@ -25,5 +26,5 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
  * @author Salman Noor
  */
 public interface WebSocketHttpHeadersCallback {
-	WebSocketHttpHeaders getWebSocketHttpHeaders();
+	WebSocketHttpHeaders getWebSocketHttpHeaders(WebSocketSession userAgentSession);
 }

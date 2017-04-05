@@ -66,7 +66,7 @@ public class ProxyWebSocketConnectionManager extends ConnectionManagerSupport
 
 	private WebSocketHttpHeaders buildWebSocketHttpHeaders() {
 		if (httpHeadersCallback != null) {
-			return httpHeadersCallback.getWebSocketHttpHeaders();
+			return httpHeadersCallback.getWebSocketHttpHeaders(userAgentSession);
 		}
 		return new WebSocketHttpHeaders();
 	}

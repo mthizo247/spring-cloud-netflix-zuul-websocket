@@ -33,8 +33,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -43,6 +45,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ErrorHandler;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -66,7 +69,8 @@ import com.github.mthizo247.cloud.netflix.zuul.web.filter.ProxyRedirectFilter;
 @ConditionalOnClass(WebSocketHandler.class)
 @ConditionalOnProperty(prefix = "zuul.ws", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(ZuulWebSocketProperties.class)
-public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
+public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerConfigurer
+		implements ApplicationListener<ContextRefreshedEvent> {
 	@Autowired
 	ZuulWebSocketProperties zuulWebSocketProperties;
 	@Autowired
@@ -144,7 +148,8 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 	public WebSocketHttpHeadersCallback webSocketHttpHeadersCallback() {
 		return new WebSocketHttpHeadersCallback() {
 			@Override
-			public WebSocketHttpHeaders getWebSocketHttpHeaders() {
+			public WebSocketHttpHeaders getWebSocketHttpHeaders(
+					WebSocketSession userAgentSession) {
 				return new WebSocketHttpHeaders();
 			}
 		};
@@ -210,6 +215,11 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 		}
 
 		zuulProperties.getIgnoredPatterns().add(ignoredPattern);
+	}
+
+	@Override
+	public void onApplicationEvent(ContextRefreshedEvent event) {
+		init();
 	}
 
 	/**

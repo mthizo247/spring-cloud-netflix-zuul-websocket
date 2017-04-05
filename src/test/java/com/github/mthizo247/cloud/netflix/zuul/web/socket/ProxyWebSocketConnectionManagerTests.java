@@ -56,7 +56,7 @@ public class ProxyWebSocketConnectionManagerTests {
 		proxyConnectionManager.errorHandler(errHandler);
 
 		when(listenableFuture.get()).thenReturn(serverSession);
-		when(stompClient.connect(uri, headersCallback.getWebSocketHttpHeaders(),
+		when(stompClient.connect(uri, headersCallback.getWebSocketHttpHeaders(wsSession),
 				proxyConnectionManager)).thenReturn(listenableFuture);
 	}
 
