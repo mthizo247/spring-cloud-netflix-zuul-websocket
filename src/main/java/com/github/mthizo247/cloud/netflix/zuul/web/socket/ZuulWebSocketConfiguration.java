@@ -16,10 +16,7 @@
 
 package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
 
@@ -194,7 +191,11 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 	@Bean
 	@ConditionalOnMissingBean(ProxyWebSocketErrorHandler.class)
 	public ProxyWebSocketErrorHandler proxyWebSocketErrorHandler() {
-		return new DefaultProxyWebSocketErrorHandler();
+		Set<ProxyWebSocketErrorHandler> handlerSet = new HashSet<>();
+		handlerSet.add(new DefaultProxyWebSocketErrorHandler());
+		handlerSet.add(new ReconnectErrorHandler());
+
+		return new CompositeErrorHandler(handlerSet);
 	}
 
 	@Bean
