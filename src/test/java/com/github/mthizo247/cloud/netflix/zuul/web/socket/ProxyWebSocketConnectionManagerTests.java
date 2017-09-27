@@ -80,7 +80,7 @@ public class ProxyWebSocketConnectionManagerTests {
 		proxyConnectionManager.handleException(serverSession, StompCommand.MESSAGE,
 				headers, payload, exception);
 
-		verify(errHandler).handleError(exception);
+		verify(errHandler).handleError(new ProxySessionException(proxyConnectionManager, serverSession, exception));
 	}
 
 	@Test
@@ -88,6 +88,6 @@ public class ProxyWebSocketConnectionManagerTests {
 		Throwable exception = new Exception("E");
 		proxyConnectionManager.handleTransportError(serverSession, exception);
 
-		verify(errHandler).handleError(exception);
+		verify(errHandler).handleError(new ProxySessionException(proxyConnectionManager, serverSession, exception));
 	}
 }

@@ -23,4 +23,24 @@ public class ProxySessionException extends Exception {
 	public StompSession getSession() {
 		return session;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		ProxySessionException that = (ProxySessionException) o;
+
+		if (connectionManager != null ? !connectionManager.equals(that.connectionManager) : that.connectionManager != null)
+			return false;
+		return session != null ? session.equals(that.session) : that.session == null;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = connectionManager != null ? connectionManager.hashCode() : 0;
+		result = 31 * result + (session != null ? session.hashCode() : 0);
+		return result;
+	}
+
 }
