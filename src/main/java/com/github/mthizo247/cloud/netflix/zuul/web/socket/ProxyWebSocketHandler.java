@@ -171,8 +171,12 @@ public class ProxyWebSocketHandler extends WebSocketHandlerDecorator {
 		String routeHost = zuulPropertiesResolver.getRouteHost(wsBrokerage);
 		Assert.notNull(routeHost, "routeHost");
 
-		String uri = ServletUriComponentsBuilder.fromHttpUrl(routeHost).path(path)
-				.toUriString();
+        String uri = ServletUriComponentsBuilder
+                .fromHttpUrl(routeHost)
+                .path(path)
+                .replaceQuery(sessionUri.getQuery())
+                .toUriString();
+
 		ProxyWebSocketConnectionManager connectionManager = new ProxyWebSocketConnectionManager(
 				messagingTemplate, stompClient, session, headersCallback, uri);
 		connectionManager.errorHandler(this.errorHandler);
