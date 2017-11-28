@@ -43,6 +43,7 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.SockJsServiceRegistration;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
@@ -52,7 +53,13 @@ import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Zuul reverse proxy web socket configuration
@@ -84,15 +91,18 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        boolean wsEnabled = false;
         for (Map.Entry<String, ZuulWebSocketProperties.WsBrokerage> entry : zuulWebSocketProperties
                 .getBrokerages().entrySet()) {
             ZuulWebSocketProperties.WsBrokerage wsBrokerage = entry.getValue();
             if (wsBrokerage.isEnabled()) {
-                registry.addEndpoint(wsBrokerage.getEndPoints())
-                        // bypasses spring web security
-                        .setAllowedOrigins("*").withSockJS();
+                this.addStompEndpoint(registry, wsBrokerage.getEndPoints());
+                wsEnabled = true;
             }
         }
+
+        if (!wsEnabled)
+            this.addStompEndpoint(registry, UUID.randomUUID().toString());
     }
 
     @Override
@@ -109,6 +119,12 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
                         wsBrokerage.getDestinationPrefixes());
             }
         }
+    }
+
+    private SockJsServiceRegistration addStompEndpoint(StompEndpointRegistry registry, String... endpoint) {
+        return registry.addEndpoint(endpoint)
+                // bypasses spring web security
+                .setAllowedOrigins("*").withSockJS();
     }
 
     private String[] mergeBrokersWithApplicationDestinationPrefixes(
