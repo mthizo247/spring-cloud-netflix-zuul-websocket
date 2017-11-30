@@ -83,6 +83,7 @@ public class ProxyRedirectFilter extends ZuulFilter {
 						&& redirectTo.getPort() == routeLocation.getPort()) {
 					String toLocation = ServletUriComponentsBuilder
 							.fromHttpUrl(zuulResponseHeader.second())
+							.host(request.getServerName())
 							.port(request.getServerPort())
 							.replacePath(
 									buildRoutePath(route, zuulResponseHeader.second()))
