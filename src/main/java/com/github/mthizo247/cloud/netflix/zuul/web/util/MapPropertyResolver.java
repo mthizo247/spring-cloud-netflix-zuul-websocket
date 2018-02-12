@@ -5,7 +5,7 @@ import org.springframework.core.env.AbstractPropertyResolver;
 import java.util.Map;
 
 /**
- * Created by ronald22 on 12/02/2018.
+ * @author Ronald Mthombeni
  */
 public class MapPropertyResolver extends AbstractPropertyResolver {
 
