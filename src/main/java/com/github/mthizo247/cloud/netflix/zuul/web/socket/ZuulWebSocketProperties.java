@@ -62,6 +62,7 @@ public class ZuulWebSocketProperties {
 	public static class WsBrokerage {
 		private boolean enabled = true;
 		private String id;
+		private String routeId;
 		private String[] endPoints;
 		private String[] brokers;
 		private String[] destinationPrefixes;
@@ -80,6 +81,14 @@ public class ZuulWebSocketProperties {
 
 		public void setId(String id) {
 			this.id = id;
+		}
+
+		public String getRouteId() {
+			return routeId;
+		}
+
+		public void setRouteId(String routeId) {
+			this.routeId = routeId;
 		}
 
 		public String[] getEndPoints() {

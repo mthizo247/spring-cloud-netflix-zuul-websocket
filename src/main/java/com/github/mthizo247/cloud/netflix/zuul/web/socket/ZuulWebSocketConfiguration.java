@@ -17,6 +17,11 @@
 package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
 import com.github.mthizo247.cloud.netflix.zuul.web.filter.ProxyRedirectFilter;
+import com.github.mthizo247.cloud.netflix.zuul.web.target.CompositeProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.target.EurekaProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.target.LoadBalancedProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.target.ProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.target.UrlProxyTargetResolver;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +31,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -81,7 +88,7 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     @Autowired
     ZuulProperties zuulProperties;
     @Autowired
-    ZuulPropertiesResolver zuulPropertiesResolver;
+    ProxyTargetResolver proxyTargetResolver;
     @Autowired
     ProxyWebSocketErrorHandler proxyWebSocketErrorHandler;
     @Autowired
@@ -147,7 +154,8 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
             public WebSocketHandler decorate(WebSocketHandler handler) {
                 ProxyWebSocketHandler proxyWebSocketHandler = new ProxyWebSocketHandler(
                         handler, stompClient, webSocketHttpHeadersCallback,
-                        messagingTemplate, zuulPropertiesResolver,
+                        messagingTemplate,
+                        proxyTargetResolver,
                         zuulWebSocketProperties);
                 proxyWebSocketHandler.errorHandler(proxyWebSocketErrorHandler);
                 return proxyWebSocketHandler;
@@ -168,14 +176,27 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public ZuulPropertiesResolver zuulPropertiesResolver(
-            final ZuulProperties zuulProperties, final DiscoveryClient discoveryClient) {
-        Set<ZuulPropertiesResolver> resolvers = new HashSet<>();
-        resolvers.add(new UrlPropertiesResolver(zuulProperties));
-        resolvers.add(new EurekaPropertiesResolver(discoveryClient, zuulProperties));
+    public ProxyTargetResolver urlProxyTargetResolver(
+            final ZuulProperties zuulProperties) {
+        return new UrlProxyTargetResolver(zuulProperties);
+    }
 
-        return new CompositeZuulPropertiesResolver(resolvers);
+    @Bean
+    public ProxyTargetResolver discoveryProxyTargetResolver(
+            final ZuulProperties zuulProperties, final DiscoveryClient discoveryClient) {
+        return new EurekaProxyTargetResolver(discoveryClient, zuulProperties);
+    }
+
+    @Bean
+    public ProxyTargetResolver loadBalancedProxyTargetResolver(
+            final ZuulProperties zuulProperties, final LoadBalancerClient loadBalancerClient) {
+        return new LoadBalancedProxyTargetResolver(loadBalancerClient, zuulProperties);
+    }
+
+    @Bean
+    @Primary
+    public ProxyTargetResolver compositeProxyTargetResolver(final List<ProxyTargetResolver> resolvers) {
+        return new CompositeProxyTargetResolver(resolvers);
     }
 
     @Bean
