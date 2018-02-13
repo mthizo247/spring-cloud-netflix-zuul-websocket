@@ -27,8 +27,6 @@ import com.github.mthizo247.cloud.netflix.zuul.web.target.LoadBalancedProxyTarge
 import com.github.mthizo247.cloud.netflix.zuul.web.target.ProxyTargetResolver;
 import com.github.mthizo247.cloud.netflix.zuul.web.target.UrlProxyTargetResolver;
 import com.github.mthizo247.cloud.netflix.zuul.web.util.DefaultErrorAnalyzer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -50,7 +48,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.util.ErrorHandler;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
@@ -240,13 +237,6 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     }
 
     @Bean
-    @ConditionalOnMissingBean(ProxyWebSocketErrorHandler.class)
-    public ProxyWebSocketErrorHandler defaultProxyWebSocketErrorHandler() {
-        return new DefaultProxyWebSocketErrorHandler();
-    }
-
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.security.web.util.ThrowableAnalyzer")
     public ProxyWebSocketErrorHandler reconnectErrorHandler() {
         return new ReconnectErrorHandler(new DefaultErrorAnalyzer());
     }
@@ -280,24 +270,5 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         init();
-    }
-
-    /**
-     * An {@link ErrorHandler} implementation that logs the Throwable at error level. It
-     * does not perform any additional error handling. This can be useful when suppression
-     * of errors is the intended behavior.
-     */
-    private static class DefaultProxyWebSocketErrorHandler
-            implements ProxyWebSocketErrorHandler {
-
-        private final Log logger = LogFactory
-                .getLog(DefaultProxyWebSocketErrorHandler.class);
-
-        @Override
-        public void handleError(Throwable t) {
-            if (logger.isErrorEnabled()) {
-                logger.error("Proxy web socket error occurred.", t);
-            }
-        }
     }
 }

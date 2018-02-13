@@ -1,6 +1,8 @@
 package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
 import com.github.mthizo247.cloud.netflix.zuul.web.util.ErrorAnalyzer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.messaging.simp.stomp.ConnectionLostException;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 
@@ -11,6 +13,8 @@ import java.io.IOException;
  */
 public class ReconnectErrorHandler implements ProxyWebSocketErrorHandler {
     private static final long CONNECTION_LOST_RECONNECT_INTERVAL = 10000;
+    private final Log logger = LogFactory
+            .getLog(ReconnectErrorHandler.class);
     private ErrorAnalyzer errorAnalyzer;
 
     public ReconnectErrorHandler(ErrorAnalyzer errorAnalyzer) {
@@ -19,6 +23,10 @@ public class ReconnectErrorHandler implements ProxyWebSocketErrorHandler {
 
     @Override
     public void handleError(Throwable t) {
+        if (logger.isErrorEnabled()) {
+            logger.error("Proxy web socket error occurred.", t);
+        }
+
         if (!(t instanceof ProxySessionException))
             return;
 
