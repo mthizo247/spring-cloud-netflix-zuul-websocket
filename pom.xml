@@ -6,7 +6,7 @@
     <groupId>com.github.mthizo247</groupId>
     <artifactId>spring-cloud-netflix-zuul-websocket</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.4.RELEASE</version>
+    <version>1.0.5.RELEASE</version>
     <name>Spring Cloud Netflix Zuul Websocket</name>
     <description>Spring Cloud Netflix Zuul Websocket</description>
     <url>https://www.discovery.co.za</url>

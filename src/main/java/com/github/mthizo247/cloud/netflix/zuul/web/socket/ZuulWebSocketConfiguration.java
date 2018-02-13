@@ -183,7 +183,6 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     }
 
     @Bean
-    @ConditionalOnMissingBean(WebSocketHttpHeadersCallback.class)
     public WebSocketHttpHeadersCallback loginCookieHeadersCallback() {
         return new LoginCookieHeadersCallback();
     }
