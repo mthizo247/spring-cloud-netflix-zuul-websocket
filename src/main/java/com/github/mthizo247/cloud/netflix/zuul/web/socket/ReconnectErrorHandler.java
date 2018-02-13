@@ -4,7 +4,6 @@ import com.github.mthizo247.cloud.netflix.zuul.web.util.ErrorAnalyzer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.messaging.simp.stomp.ConnectionLostException;
-import org.springframework.security.web.util.ThrowableAnalyzer;
 
 import java.io.IOException;
 
@@ -50,7 +49,7 @@ public class ReconnectErrorHandler implements ProxyWebSocketErrorHandler {
     private boolean isConnectionLost(ProxySessionException proxyException) {
         Throwable cause = proxyException.getCause();
         Throwable[] causeChain = errorAnalyzer.determineCauseChain(cause);
-        Throwable throwable = new ThrowableAnalyzer()
+        Throwable throwable = errorAnalyzer
                 .getFirstThrowableOfType(ConnectionLostException.class, causeChain);
 
         if (throwable != null)
