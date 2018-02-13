@@ -16,34 +16,31 @@
 
 package com.github.mthizo247.cloud.netflix.zuul.web.authentication;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.codec.Base64;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Ronald Mthombeni
  */
-public class BasicAuthPrincipalHeadersCallback extends AbstractHeadersCallback {
+public class LoginCookieHeadersCallback extends AbstractHeadersCallback {
+    protected final Log logger = LogFactory.getLog(getClass());
+
     @Override
     protected void applyHeadersInternal(WebSocketSession userAgentSession, WebSocketHttpHeaders headers) {
-        Authentication authentication = (Authentication) userAgentSession.getPrincipal();
-        String usernameColonPwd = authentication.getName() + ":"
-                + authentication.getCredentials().toString();
-        String encodedCredentials = new String(
-                Base64.encode(usernameColonPwd.getBytes()));
-        headers.put(HttpHeaders.AUTHORIZATION,
-                Collections.singletonList("Basic " + encodedCredentials));
+        List<String> sessionCookies = userAgentSession.getHandshakeHeaders().get(HttpHeaders.COOKIE);
+        headers.put(HttpHeaders.COOKIE, sessionCookies);
         if (logger.isDebugEnabled()) {
-            logger.debug("Added basic authentication header for user " + authentication.getName() + " to web sockets http headers");
+            logger.debug("Added cookie authentication header to web sockets http headers");
         }
     }
 
     @Override
     protected boolean shouldApplyHeaders(WebSocketSession userAgentSession, WebSocketHttpHeaders headers) {
-        return !headers.containsKey(HttpHeaders.AUTHORIZATION) && userAgentSession.getPrincipal() instanceof Authentication;
+        return !headers.containsKey(HttpHeaders.COOKIE) && userAgentSession.getHandshakeHeaders().containsKey(HttpHeaders.COOKIE);
     }
 }

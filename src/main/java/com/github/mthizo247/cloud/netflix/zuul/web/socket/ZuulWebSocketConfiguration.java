@@ -16,15 +16,21 @@
 
 package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
+import com.github.mthizo247.cloud.netflix.zuul.web.authentication.BasicAuthPrincipalHeadersCallback;
+import com.github.mthizo247.cloud.netflix.zuul.web.authentication.CompositeHeadersCallback;
+import com.github.mthizo247.cloud.netflix.zuul.web.authentication.LoginCookieHeadersCallback;
+import com.github.mthizo247.cloud.netflix.zuul.web.authentication.OAuth2BearerPrincipalHeadersCallback;
 import com.github.mthizo247.cloud.netflix.zuul.web.filter.ProxyRedirectFilter;
 import com.github.mthizo247.cloud.netflix.zuul.web.target.CompositeProxyTargetResolver;
 import com.github.mthizo247.cloud.netflix.zuul.web.target.EurekaProxyTargetResolver;
 import com.github.mthizo247.cloud.netflix.zuul.web.target.LoadBalancedProxyTargetResolver;
 import com.github.mthizo247.cloud.netflix.zuul.web.target.ProxyTargetResolver;
 import com.github.mthizo247.cloud.netflix.zuul.web.target.UrlProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.util.DefaultErrorAnalyzer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -46,8 +52,6 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ErrorHandler;
 import org.springframework.web.socket.WebSocketHandler;
-import org.springframework.web.socket.WebSocketHttpHeaders;
-import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.SockJsServiceRegistration;
@@ -62,10 +66,8 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -88,12 +90,14 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     @Autowired
     ZuulProperties zuulProperties;
     @Autowired
+    @Qualifier("compositeProxyTargetResolver")
     ProxyTargetResolver proxyTargetResolver;
     @Autowired
     ProxyWebSocketErrorHandler proxyWebSocketErrorHandler;
     @Autowired
     WebSocketStompClient stompClient;
     @Autowired
+    @Qualifier("compositeHeadersCallback")
     WebSocketHttpHeadersCallback webSocketHttpHeadersCallback;
 
     @Override
@@ -164,15 +168,27 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     }
 
     @Bean
+    @Primary
+    public WebSocketHttpHeadersCallback compositeHeadersCallback(final List<WebSocketHttpHeadersCallback> headersCallbacks) {
+        return new CompositeHeadersCallback(headersCallbacks);
+    }
+
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.security.core.Authentication")
+    public WebSocketHttpHeadersCallback basicAuthPrincipalHeadersCallback() {
+        return new BasicAuthPrincipalHeadersCallback();
+    }
+
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.security.core.OAuth2Authentication")
+    public WebSocketHttpHeadersCallback oauth2BearerPrincipalHeadersCallback() {
+        return new OAuth2BearerPrincipalHeadersCallback();
+    }
+
+    @Bean
     @ConditionalOnMissingBean(WebSocketHttpHeadersCallback.class)
-    public WebSocketHttpHeadersCallback webSocketHttpHeadersCallback() {
-        return new WebSocketHttpHeadersCallback() {
-            @Override
-            public WebSocketHttpHeaders getWebSocketHttpHeaders(
-                    WebSocketSession userAgentSession) {
-                return new WebSocketHttpHeaders();
-            }
-        };
+    public WebSocketHttpHeadersCallback loginCookieHeadersCallback() {
+        return new LoginCookieHeadersCallback();
     }
 
     @Bean
@@ -225,12 +241,20 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 
     @Bean
     @ConditionalOnMissingBean(ProxyWebSocketErrorHandler.class)
-    public ProxyWebSocketErrorHandler proxyWebSocketErrorHandler() {
-        Set<ProxyWebSocketErrorHandler> handlerSet = new HashSet<>();
-        handlerSet.add(new DefaultProxyWebSocketErrorHandler());
-        handlerSet.add(new ReconnectErrorHandler());
+    public ProxyWebSocketErrorHandler defaultProxyWebSocketErrorHandler() {
+        return new DefaultProxyWebSocketErrorHandler();
+    }
 
-        return new CompositeErrorHandler(handlerSet);
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.security.web.util.ThrowableAnalyzer")
+    public ProxyWebSocketErrorHandler reconnectErrorHandler() {
+        return new ReconnectErrorHandler(new DefaultErrorAnalyzer());
+    }
+
+    @Bean
+    @Primary
+    public ProxyWebSocketErrorHandler compositeErrorHandler(final List<ProxyWebSocketErrorHandler> errorHandlers) {
+        return new CompositeErrorHandler(errorHandlers);
     }
 
     @Bean
