@@ -16,7 +16,7 @@
 
 package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
-import com.github.mthizo247.cloud.netflix.zuul.web.target.ProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.run.ProxyTargetResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

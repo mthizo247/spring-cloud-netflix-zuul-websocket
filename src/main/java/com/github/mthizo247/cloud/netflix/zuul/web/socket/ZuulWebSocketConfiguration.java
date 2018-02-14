@@ -21,11 +21,11 @@ import com.github.mthizo247.cloud.netflix.zuul.web.authentication.CompositeHeade
 import com.github.mthizo247.cloud.netflix.zuul.web.authentication.LoginCookieHeadersCallback;
 import com.github.mthizo247.cloud.netflix.zuul.web.authentication.OAuth2BearerPrincipalHeadersCallback;
 import com.github.mthizo247.cloud.netflix.zuul.web.filter.ProxyRedirectFilter;
-import com.github.mthizo247.cloud.netflix.zuul.web.target.CompositeProxyTargetResolver;
-import com.github.mthizo247.cloud.netflix.zuul.web.target.EurekaProxyTargetResolver;
-import com.github.mthizo247.cloud.netflix.zuul.web.target.LoadBalancedProxyTargetResolver;
-import com.github.mthizo247.cloud.netflix.zuul.web.target.ProxyTargetResolver;
-import com.github.mthizo247.cloud.netflix.zuul.web.target.UrlProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.run.CompositeProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.run.EurekaProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.run.LoadBalancedProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.run.ProxyTargetResolver;
+import com.github.mthizo247.cloud.netflix.zuul.web.run.UrlProxyTargetResolver;
 import com.github.mthizo247.cloud.netflix.zuul.web.util.DefaultErrorAnalyzer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
