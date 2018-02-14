@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.mthizo247.cloud.netflix.zuul.web.run;
+package com.github.mthizo247.cloud.netflix.zuul.web.proxytarget;
 
 import com.github.mthizo247.cloud.netflix.zuul.web.socket.ZuulWebSocketProperties;
 import org.springframework.cloud.client.ServiceInstance;
