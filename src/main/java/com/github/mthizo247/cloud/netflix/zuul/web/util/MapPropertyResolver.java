@@ -22,25 +22,11 @@ public class MapPropertyResolver extends AbstractPropertyResolver {
     }
 
     @Override
-    public boolean containsProperty(String key) {
-        return map.containsKey(key);
-    }
-
-    @Override
-    public String getProperty(String key) {
-        return getProperty(key, String.class);
-    }
-
-    @Override
     public <T> T getProperty(String key, Class<T> targetType) {
-        if (map.containsKey(key)) {
-            return targetType.cast(map.get(key));
+        Object v = map.get(key);
+        if (v != null) {
+            return targetType.cast(v);
         }
-        return null;
-    }
-
-    @Override
-    public <T> Class<T> getPropertyAsClass(String key, Class<T> targetType) {
         return null;
     }
 }
