@@ -214,7 +214,7 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     @Bean
     @ConditionalOnMissingBean(WebSocketStompClient.class)
     public WebSocketStompClient stompClient(MessageConverter messageConverter,
-                                            ThreadPoolTaskScheduler taskScheduler) {
+                                            TaskScheduler taskScheduler) {
         int bufferSizeLimit = 1024 * 1024 * 8;
 
         StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
