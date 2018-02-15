@@ -49,6 +49,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.SockJsServiceRegistration;
@@ -213,20 +214,25 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 
     @Bean
     @ConditionalOnMissingBean(WebSocketStompClient.class)
-    public WebSocketStompClient stompClient(MessageConverter messageConverter,
+    public WebSocketStompClient stompClient(WebSocketClient webSocketClient, MessageConverter messageConverter,
                                             TaskScheduler taskScheduler) {
         int bufferSizeLimit = 1024 * 1024 * 8;
 
-        StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
-        List<Transport> transports = new ArrayList<>();
-        transports.add(new WebSocketTransport(webSocketClient));
-        SockJsClient sockJsClient = new SockJsClient(transports);
-        WebSocketStompClient client = new WebSocketStompClient(sockJsClient);
+        WebSocketStompClient client = new WebSocketStompClient(webSocketClient);
         client.setInboundMessageSizeLimit(bufferSizeLimit);
         client.setMessageConverter(messageConverter);
         client.setTaskScheduler(taskScheduler);
         client.setDefaultHeartbeat(new long[]{0, 0});
         return client;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(WebSocketClient.class)
+    public WebSocketClient webSocketClient() {
+        StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
+        List<Transport> transports = new ArrayList<>();
+        transports.add(new WebSocketTransport(webSocketClient));
+        return new SockJsClient(transports);
     }
 
     @Bean
