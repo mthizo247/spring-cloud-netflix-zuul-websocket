@@ -16,10 +16,15 @@
 
 package com.github.mthizo247.cloud.netflix.zuul.web.socket;
 
-import java.lang.annotation.*;
-
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Sets up a Zuul web socket configuration so that it can bridge web socket communication
@@ -32,6 +37,7 @@ import org.springframework.context.annotation.Import;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @EnableZuulProxy
+@EnableWebSocketMessageBroker
 @Import(ZuulWebSocketConfiguration.class)
 public @interface EnableZuulWebSocket {
 }

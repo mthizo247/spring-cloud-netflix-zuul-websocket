@@ -29,6 +29,7 @@ import com.github.mthizo247.cloud.netflix.zuul.web.proxytarget.UrlProxyTargetRes
 import com.github.mthizo247.cloud.netflix.zuul.web.util.DefaultErrorAnalyzer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -52,6 +53,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
 import org.springframework.web.socket.config.annotation.SockJsServiceRegistration;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
@@ -79,6 +81,7 @@ import java.util.UUID;
 @ConditionalOnClass(WebSocketHandler.class)
 @ConditionalOnProperty(prefix = "zuul.ws", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(ZuulWebSocketProperties.class)
+@AutoConfigureAfter(DelegatingWebSocketMessageBrokerConfiguration.class)
 public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerConfigurer
         implements ApplicationListener<ContextRefreshedEvent> {
     @Autowired
@@ -215,7 +218,7 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     @Bean
     @ConditionalOnMissingBean(WebSocketStompClient.class)
     public WebSocketStompClient stompClient(WebSocketClient webSocketClient, MessageConverter messageConverter,
-                                            TaskScheduler taskScheduler) {
+                                            @Qualifier("proxyStompClientTaskScheduler") TaskScheduler taskScheduler) {
         int bufferSizeLimit = 1024 * 1024 * 8;
 
         WebSocketStompClient client = new WebSocketStompClient(webSocketClient);
@@ -237,8 +240,12 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
 
     @Bean
     @ConditionalOnMissingBean(TaskScheduler.class)
+    @Qualifier("proxyStompClientTaskScheduler")
     public TaskScheduler stompClientTaskScheduler() {
-        return new ThreadPoolTaskScheduler();
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setThreadNamePrefix("ProxyStompClient-");
+        scheduler.setPoolSize(Runtime.getRuntime().availableProcessors());
+        return scheduler;
     }
 
     @Bean
