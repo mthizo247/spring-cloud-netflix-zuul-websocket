@@ -239,7 +239,6 @@ public class ZuulWebSocketConfiguration extends AbstractWebSocketMessageBrokerCo
     }
 
     @Bean
-    @ConditionalOnMissingBean(TaskScheduler.class)
     @Qualifier("proxyStompClientTaskScheduler")
     public TaskScheduler stompClientTaskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();

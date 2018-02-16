@@ -62,7 +62,7 @@ public class ProxyRedirectFilter extends ZuulFilter {
 	@Override
 	public boolean shouldFilter() {
 		RequestContext ctx = RequestContext.getCurrentContext();
-		boolean isRedirect = ctx.getResponseStatusCode() == 302;
+		boolean isRedirect = ctx.getResponseStatusCode() == 301 || ctx.getResponseStatusCode() == 302;
 		if (!isRedirect)
 			return false;
 
